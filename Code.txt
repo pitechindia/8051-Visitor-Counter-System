@@ -1,0 +1,176 @@
+#include <regx51.h>
+#include <stdio.h>
+
+// RS RW EN
+sbit rs = P3 ^ 0;
+sbit rw = P3 ^ 1;
+sbit en = P3 ^ 2;
+
+//LED
+sbit led = P1 ^ 2;
+
+// IR Sensor
+sbit sen1 = P1 ^ 0;		//Incmoing Sensor
+sbit sen2 = P1 ^ 1;		//Outgoing Sensor
+
+void lcd(char a, int b); // subroutine for lcd display
+
+//Starting Message
+unsigned char msg1[] = "Visitor Counter";
+unsigned char msg2[] = "System ";
+
+// Message when Person Enter
+unsigned char e1[] = "Person Entering";
+
+// Message when Person Exit
+unsigned char x1[] = "Person Exit  ";
+
+// Message to Diplay Total no. of Person inside
+unsigned char msg[] = "Total Person: ";
+
+char ch[10];
+void delay();   // sub-routine for delay
+void counter(); // sub-routine for counters
+void start();		// sub-routine for starting Message
+void enter();		// sub-routine for Entering 
+void exit();		// sub-routine for Entering
+
+int k;
+
+unsigned int count; // to count person
+
+
+void main()
+{
+//  Defining as INPUT or OUTPUT
+		sen1 = 1;
+		sen1 = 1;
+    led = 0;
+    lcd(0x38, 0);		//Initiliazing LCD
+    lcd(0x0c, 0);		//Display ON
+    lcd(0x80, 0);		// Force Cursor to Beginning of First Line
+	
+		start();				// Calling Start Function...
+	
+		delay();
+		lcd(0x80, 0);		// Force Cursor to Beginning of First Line
+	
+		// Infinite Loop
+    while (1)
+    {
+				//  Conditions....
+        if (sen1 == 1)
+        {
+            count = count + 1;
+						enter();			// Calling Enter Function...
+						delay();			// Delay
+						lcd(0x01, 0);	//Clear LCD
+						lcd(0x01, 1);
+        }
+
+        if (sen2 == 1)
+        {
+            count = count - 1;
+						exit();				// Calling Exit Function...
+						delay();			// Delay
+						lcd(0x01, 0);	//Clear LCD
+						lcd(0x01, 1);
+        }
+
+        counter();				// Calling Counter Function...
+        delay();					// Delay
+        lcd(0x01, 0);			//Clear LCD
+        lcd(0x01, 1);
+    }
+}
+
+//  Start Function
+void start()
+{
+	 for (k = 0; k < 15; k++)
+    {
+        lcd(msg1[k], 1);
+    }
+
+    lcd(0xc0, 0);
+    lcd(0x14, 0);
+		for (k = 0; k < 8; k++)
+    {
+        lcd(msg2[k], 1);
+    }
+		
+		lcd(0x01, 0);
+		lcd(0x01, 1);
+
+}
+
+//  Delay Function
+void delay()
+{
+    int i;
+    for (i = 0; i <= 6000; i++); // software delay
+}
+
+//  Enter Function
+void enter()
+{
+	for (k = 0; k < 15; k++)
+    {
+        lcd(e1[k], 1);
+    }
+}
+
+//  Exit Function
+void exit()
+{
+	for (k = 0; k < 15; k++)
+    {
+        lcd(x1[k], 1);
+    }
+}
+
+//  Counter Function
+void counter()
+{
+    if (count > 100)
+    {
+        count = 0;
+        delay();
+    }
+		
+    if (count >= 1)
+    {
+        led = 1;		//LED ON
+    }
+    else
+    {
+        led = 0;		//LED OFF
+    }
+		
+		// To Display "Total Person" Message
+    for (k = 0; k < 15; k++)
+    {
+        lcd(msg[k], 1);
+    }
+		
+		// To Display Count value conver integer to character...
+    lcd(0xc0, 0);
+    lcd(0x14, 0);
+    sprintf(ch, "%u", count); // conversion of integer to character
+    for (k = 0; k < 5; k++)
+    {
+        lcd(ch[k], 1);
+    }
+}
+
+//	LCD function
+void lcd(char a, int b)
+{
+    P2 = a;
+    rs = b;
+    rw = 0;
+    en = 1;
+    delay();
+    en = 0;
+    delay();
+}
